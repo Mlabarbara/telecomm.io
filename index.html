@@ -1,55 +1,63 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <script src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython.min.js"></script>
+    <meta charset="UTF-8">
+    <title>IPv4 Header Decoder</title>
+    <!-- Include Brython -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.5/brython.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.10.5/brython_stdlib.js"></script>
 </head>
 <body onload="brython()">
-    <input id="input" type="text" placeholder="Enter binary string">
-    <button onclick="python:decode()">Decode</button>
+    <input id="binary_str" type="text" placeholder="Enter 160-bit binary string">
+    <button id="decode_button">Decode</button>
     <pre id="output"></pre>
+
+    <!-- Include your Python script -->
     <script type="text/python">
-    from browser import document
+    from browser import document, alert
+
+    def decode_ipv4_header(binary_str):
+        fields = [
+            ("Version", 4),
+            ("IHL", 4),
+            ("DSCP", 6),
+            ("ECN", 2),
+            ("Total Length", 16),
+            ("Identification", 16),
+            ("Flags", 3),
+            ("Fragment Offset", 13),
+            ("TTL", 8),
+            ("Protocol", 8),
+            ("Header Checksum", 16),
+            ("Source IP Address", 32),
+            ("Destination IP Address", 32)
+        ]
+
+        start = 0
+        decoded_header = {}
+        for field_name, bit_count in fields:
+            bits = binary_str[start:start+bit_count]
+            if "Address" in field_name:
+                # Convert to IP address
+                hex_val = hex(int(bits, 2))[2:].zfill(8)
+                ip_address = ".".join(str(int(hex_val[i:i+2], 16)) for i in range(0, 8, 2))
+                decoded_header[field_name] = ip_address
+            else:
+                hex_val = hex(int(bits, 2))[2:].zfill(bit_count // 4)
+                decoded_header[field_name] = hex_val
+            start += bit_count
+        return decoded_header
 
     def decode():
-        binary_string = document['input'].value
+        binary_str = document["binary_str"].value
+        if len(binary_str) != 160:
+            alert("Input should be a 160-bit binary string.")
+            return
+        decoded_header = decode_ipv4_header(binary_str)
+        output = "\n".join(f"{k}: {v}" for k, v in decoded_header.items())
+        document["output"].text = output
 
-        # convert binary string to hexadecimal
-        hex_string = '{:0>2x}'.format(int(binary_string, 2))
-
-        # unpack the header fields from the hex string
-        version_ihl, tos, tot_len, id, flags_frags, ttl, proto, checksum, src, dest = struct.unpack('!BBHHHBBHII', bytes.fromhex(hex_string))
-
-        # extract version and header length from version_ihl
-        version = version_ihl >> 4
-        ihl = version_ihl & 0x0F
-
-        # convert protocol number to name
-        if proto == 17:
-            protocol = "UDP"
-        elif proto == 6:
-            protocol = "TCP"
-        else:
-            protocol = str(proto)
-
-        # convert src and dest to dotted decimal format
-        src_ip = socket.inet_ntoa(struct.pack('!I', src))
-        dest_ip = socket.inet_ntoa(struct.pack('!I', dest))
-
-        # print the decoded header
-        output = f"Version: {version}\n"
-        output += f"Header length: {ihl} ({ihl * 4} bytes)\n"
-        output += f"TOS: 0x{tos:02x}\n"
-        output += f"Total Length: 0x{tot_len:04x} ({tot_len} bytes)\n"
-        output += f"Identification: 0x{id:04x}\n"
-        output += f"Flags and Fragments: 0x{flags_frags:04x}\n"
-        output += f"TTL: 0x{ttl:02x} ({ttl} hops)\n"
-        output += f"Protocol: 0x{proto:02x} ({protocol})\n"
-        output += f"Header Checksum: 0x{checksum:04x}\n"
-        output += f"Source: 0xac{src:08x} ({src_ip})\n"
-        output += f"Destination: 0xac{dest:08x} ({dest_ip})"
-
-        document['output'].text = output
+    document["decode_button"].bind("click", decode)
     </script>
 </body>
 </html>
