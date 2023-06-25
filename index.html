@@ -45,8 +45,9 @@
 
         function decode() {
             var binaryStr = document.getElementById("binary_str").value;
-            if (binaryStr.length !== 160) {
-                alert("Input should be a 160-bit binary string.");
+            var strLength = binaryStr.length;
+            if (strLength !== 160) {
+                alert("Input should be a 160-bit binary string. You entered " + strLength + " bits.");
                 return;
             }
             var decodedHeader = decodeIPv4Header(binaryStr);
