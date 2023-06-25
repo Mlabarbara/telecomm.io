@@ -1,24 +1,55 @@
+<!DOCTYPE html>
 <html>
-
 <head>
     <meta charset="utf-8">
-    <script type="text/javascript"
-        src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython.min.js">
-    </script>
-    <script type="text/javascript"
-        src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython_stdlib.js">
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython.min.js"></script>
 </head>
-
 <body onload="brython()">
+    <input id="input" type="text" placeholder="Enter binary string">
+    <button onclick="python:decode()">Decode</button>
+    <pre id="output"></pre>
+    <script type="text/python">
+    from browser import document
 
-<script type="text/python">
-from browser import document
+    def decode():
+        binary_string = document['input'].value
 
-document <= "Hello !"
-</script>
+        # convert binary string to hexadecimal
+        hex_string = '{:0>2x}'.format(int(binary_string, 2))
 
+        # unpack the header fields from the hex string
+        version_ihl, tos, tot_len, id, flags_frags, ttl, proto, checksum, src, dest = struct.unpack('!BBHHHBBHII', bytes.fromhex(hex_string))
 
+        # extract version and header length from version_ihl
+        version = version_ihl >> 4
+        ihl = version_ihl & 0x0F
+
+        # convert protocol number to name
+        if proto == 17:
+            protocol = "UDP"
+        elif proto == 6:
+            protocol = "TCP"
+        else:
+            protocol = str(proto)
+
+        # convert src and dest to dotted decimal format
+        src_ip = socket.inet_ntoa(struct.pack('!I', src))
+        dest_ip = socket.inet_ntoa(struct.pack('!I', dest))
+
+        # print the decoded header
+        output = f"Version: {version}\n"
+        output += f"Header length: {ihl} ({ihl * 4} bytes)\n"
+        output += f"TOS: 0x{tos:02x}\n"
+        output += f"Total Length: 0x{tot_len:04x} ({tot_len} bytes)\n"
+        output += f"Identification: 0x{id:04x}\n"
+        output += f"Flags and Fragments: 0x{flags_frags:04x}\n"
+        output += f"TTL: 0x{ttl:02x} ({ttl} hops)\n"
+        output += f"Protocol: 0x{proto:02x} ({protocol})\n"
+        output += f"Header Checksum: 0x{checksum:04x}\n"
+        output += f"Source: 0xac{src:08x} ({src_ip})\n"
+        output += f"Destination: 0xac{dest:08x} ({dest_ip})"
+
+        document['output'].text = output
+    </script>
 </body>
-
 </html>
