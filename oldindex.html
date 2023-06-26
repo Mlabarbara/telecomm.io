@@ -21,31 +21,21 @@
                 {name: "Destination IP Address", bits: 32}
             ];
 
-            var protocolMap = {
-                "01": "ICMP",
-                "02": "IGMP",
-                "06": "TCP",
-                "11": "UDP"
-            };
-
             var start = 0;
             var decodedHeader = {};
             for (var i=0; i<fields.length; i++) {
                 var field = fields[i];
                 var bits = binaryStr.slice(start, start+field.bits);
-                var hexVal = parseInt(bits, 2).toString(16).padStart(field.bits / 4, "0");
                 if (field.name.includes("Address")) {
                     // Convert to IP address
+                    var hexVal = parseInt(bits, 2).toString(16).padStart(8, "0");
                     var ipParts = [];
                     for (var j=0; j<8; j+=2) {
                         ipParts.push(parseInt(hexVal.slice(j, j+2), 16));
                     }
                     decodedHeader[field.name] = ipParts.join(".");
-                } else if (field.name === "IHL") {
-                    decodedHeader["Header Length"] = parseInt(hexVal, 16);
-                } else if (field.name === "Protocol") {
-                    decodedHeader[field.name] = protocolMap[hexVal] || hexVal;
                 } else {
+                    var hexVal = parseInt(bits, 2).toString(16).padStart(field.bits / 4, "0");
                     decodedHeader[field.name] = hexVal;
                 }
                 start += field.bits;
