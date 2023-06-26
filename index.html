@@ -8,25 +8,16 @@
             var fields = [
                 {name: "Version", bits: 4},
                 {name: "IHL", bits: 4},
-                {name: "DSCP", bits: 6},
-                {name: "ECN", bits: 2},
+                {name: "TOS", bits: 8},
                 {name: "Total Length", bits: 16},
                 {name: "Identification", bits: 16},
-                {name: "Flags", bits: 3},
-                {name: "Fragment Offset", bits: 13},
+                {name: "Flags and Fragments", bits: 16},
                 {name: "TTL", bits: 8},
                 {name: "Protocol", bits: 8},
                 {name: "Header Checksum", bits: 16},
-                {name: "Source IP Address", bits: 32},
-                {name: "Destination IP Address", bits: 32}
+                {name: "Source", bits: 32},
+                {name: "Destination", bits: 32}
             ];
-
-            var protocolMap = {
-                "01": "ICMP",
-                "02": "IGMP",
-                "06": "TCP",
-                "11": "UDP"
-            };
 
             var start = 0;
             var decodedHeader = {};
@@ -34,20 +25,7 @@
                 var field = fields[i];
                 var bits = binaryStr.slice(start, start+field.bits);
                 var hexVal = parseInt(bits, 2).toString(16).padStart(field.bits / 4, "0");
-                if (field.name.includes("Address")) {
-                    // Convert to IP address
-                    var ipParts = [];
-                    for (var j=0; j<8; j+=2) {
-                        ipParts.push(parseInt(hexVal.slice(j, j+2), 16));
-                    }
-                    decodedHeader[field.name] = ipParts.join(".");
-                } else if (field.name === "IHL") {
-                    decodedHeader["Header Length"] = parseInt(hexVal, 16);
-                } else if (field.name === "Protocol") {
-                    decodedHeader[field.name] = protocolMap[hexVal] || hexVal;
-                } else {
-                    decodedHeader[field.name] = hexVal;
-                }
+                decodedHeader[field.name] = hexVal;
                 start += field.bits;
             }
             return decodedHeader;
@@ -55,9 +33,9 @@
 
         function decode() {
             var binaryStr = document.getElementById("binary_str").value;
-            var strLength = binaryStr.length;
-            if (strLength !== 160) {
-                alert("Input should be a 160-bit binary string. You entered " + strLength + " bits.");
+            if (binaryStr.length !== 160) {
+                var bitCount = binaryStr.length;
+                alert(`Input should be a 160-bit binary string. You entered ${bitCount} bits.`);
                 return;
             }
             var decodedHeader = decodeIPv4Header(binaryStr);
