@@ -1,55 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>IPv4 Header Decoder</title>
-    <script>
-        function decodeIPv4Header(binaryStr) {
-            var fields = [
-                {name: "Version", bits: 4},
-                {name: "IHL", bits: 4},
-                {name: "TOS", bits: 8},
-                {name: "Total Length", bits: 16},
-                {name: "Identification", bits: 16},
-                {name: "Flags and Fragments", bits: 16},
-                {name: "TTL", bits: 8},
-                {name: "Protocol", bits: 8},
-                {name: "Header Checksum", bits: 16},
-                {name: "Source", bits: 32},
-                {name: "Destination", bits: 32}
-            ];
-
-            var start = 0;
-            var decodedHeader = {};
-            for (var i=0; i<fields.length; i++) {
-                var field = fields[i];
-                var bits = binaryStr.slice(start, start+field.bits);
-                var hexVal = parseInt(bits, 2).toString(16).padStart(field.bits / 4, "0");
-                decodedHeader[field.name] = hexVal;
-                start += field.bits;
-            }
-            return decodedHeader;
-        }
-
-        function decode() {
-            var binaryStr = document.getElementById("binary_str").value;
-            if (binaryStr.length !== 160) {
-                var bitCount = binaryStr.length;
-                alert(`Input should be a 160-bit binary string. You entered ${bitCount} bits.`);
-                return;
-            }
-            var decodedHeader = decodeIPv4Header(binaryStr);
-            var output = "";
-            for (var key in decodedHeader) {
-                output += key + ": " + decodedHeader[key] + "\n";
-            }
-            document.getElementById("output").innerText = output;
-        }
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binary to HTML Converter</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <input id="binary_str" type="text" placeholder="Enter 160-bit binary string">
-    <button onclick="decode()">Decode</button>
-    <pre id="output"></pre>
+  <header>
+    <h1>Binary to HTML Converter</h1>
+  </header>
+  <main>
+    <input type="text" id="binaryInput" placeholder="Enter binary number">
+    <button id="decodeButton">Decode</button>
+    <p id="result"></p>
+  </main>
+  <script src="scripts.js"></script>
 </body>
 </html>
